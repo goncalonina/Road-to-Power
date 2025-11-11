@@ -25,10 +25,22 @@ jobs:
           STRAVA_AUTH_CODE: ${{ secrets.STRAVA_AUTH_CODE }}
         run: python export_strava.py
 
+      - name: Save token for next run
+        run: |
+          if [ -f "strava_token.json" ]; then
+            git add strava_token.json
+          fi
+
       - name: Commit & Push results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add strava_exports/
-          git commit -m "Weekly Strava export"
-          git push
+          if git diff --cached --quiet; then
+            echo "Sem novas alterações a commitar."
+          else
+            git commit -m "Weekly Strava export"
+            git push
+          fi
